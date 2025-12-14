@@ -2,85 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Camera + Location Share</title>
+  <title>Share My Location</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 20px;
+      padding: 30px;
       background: #f4f4f4;
     }
-    h2 {
-      margin-bottom: 10px;
-    }
-    video {
-      width: 100%;
-      max-width: 320px;
-      border-radius: 10px;
-      margin-top: 10px;
-      display: none;
-    }
     button {
-      padding: 12px 18px;
-      margin-top: 15px;
-      font-size: 16px;
+      padding: 14px 20px;
+      font-size: 18px;
       border: none;
       border-radius: 6px;
       background: #25D366;
       color: white;
       cursor: pointer;
     }
-    input {
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
 
-  <h2>Upload Image & Share Location</h2>
+  <h2>Share My Location</h2>
+  <p>Tap the button below to send your current location on WhatsApp</p>
 
-  <input type="file" id="imageInput" accept="image/png,image/jpeg">
-
-  <br>
-  <button onclick="startApp()">Continue</button>
-
-  <video id="camera" autoplay playsinline></video>
+  <button onclick="shareLocation()">Send Location</button>
 
 <script>
-const WHATSAPP_NUMBER = "919XXXXXXXXX"; // <-- replace
+const WHATSAPP_NUMBER = "919XXXXXXXXX"; // replace with number
 
-let locationFetched = false;
-let cameraStarted = false;
-
-function startApp() {
-  const fileInput = document.getElementById("imageInput");
-
-  if (!fileInput.files.length) {
-    alert("Please upload an image first");
+function shareLocation() {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
     return;
   }
 
-  startCamera();
-  fetchLocation();
-}
-
-function startCamera() {
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "user" }
-  })
-  .then(stream => {
-    const video = document.getElementById("camera");
-    video.srcObject = stream;
-    video.style.display = "block";
-    cameraStarted = true;
-  })
-  .catch(() => {
-    alert("Camera permission denied");
-  });
-}
-
-function fetchLocation() {
   navigator.geolocation.getCurrentPosition(
     position => {
       const lat = position.coords.latitude;
@@ -88,20 +45,19 @@ function fetchLocation() {
 
       const mapLink = `https://maps.google.com/?q=${lat},${lon}`;
 
-      const message =
-`Image uploaded successfully.
-Current location:
-${mapLink}
-
-Please attach the uploaded image.`;
+      const message = `My current location:\n${mapLink}`;
 
       const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, "_blank");
 
-      locationFetched = true;
+      // Direct navigation avoids popup blocking
+      window.location.href = waUrl;
     },
     () => {
       alert("Location permission denied");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000
     }
   );
 }
