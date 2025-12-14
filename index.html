@@ -1,5 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera + Location to WhatsApp</title>
+</head>
+<body>
+
+<h3>Upload Image</h3>
+<input type="file" accept="image/png,image/jpeg" id="imageInput">
+
+<br><br>
+<button onclick="startProcess()">Continue</button>
+
+<br><br>
+<button id="sendBtn" onclick="sendWhatsApp()" style="display:none;">
+  Send Location on WhatsApp
+</button>
+
+<video id="video" autoplay playsinline width="300"></video>
+
 <script>
-const whatsappNumber = "919453501424"; // 9453501424 with country code
+const whatsappNumber = "919453501424";
+let waUrl = "";
 
 function startProcess() {
   if (!document.getElementById("imageInput").files.length) {
@@ -7,53 +28,41 @@ function startProcess() {
     return;
   }
 
-  openCamera();
-  getLocationAndSend();
-}
-
-function openCamera() {
+  // Start camera
   navigator.mediaDevices.getUserMedia({
     video: { facingMode: "user" }
   }).then(stream => {
     document.getElementById("video").srcObject = stream;
-  }).catch(() => {
-    alert("Camera permission denied");
   });
-}
 
-function getLocationAndSend() {
-  if (!navigator.geolocation) {
-    alert("Geolocation not supported");
-    return;
-  }
+  // Fetch location
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
 
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-
-      const mapsLink = `https://maps.google.com/?q=${lat},${lon}`;
-
-      const message =
+    const mapsLink = `https://maps.google.com/?q=${lat},${lon}`;
+    const message =
 `Image uploaded.
 My current location:
 ${mapsLink}
 
 Please attach the image and send.`;
 
-      const url =
-        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-      // Use direct navigation (most reliable)
-      window.location.href = url;
-    },
-    () => {
-      alert("Location permission denied");
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000
-    }
-  );
+    // Show send button
+    document.getElementById("sendBtn").style.display = "inline-block";
+
+  }, () => {
+    alert("Location permission denied");
+  });
+}
+
+function sendWhatsApp() {
+  // THIS is user-initiated → browser allows it
+  window.location.href = waUrl;
 }
 </script>
+
+</body>
+</html>
