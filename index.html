@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera + Location Share</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    video {
+      width: 100%;
+      max-width: 320px;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: none;
+    }
+    button {
+      padding: 12px 18px;
+      margin-top: 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #25D366;
+      color: white;
+      cursor: pointer;
+    }
+    input {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Upload Image & Share Location</h2>
+
+  <input type="file" id="imageInput" accept="image/png,image/jpeg">
+
+  <br>
+  <button onclick="startApp()">Continue</button>
+
+  <video id="camera" autoplay playsinline></video>
+
+<script>
+const WHATSAPP_NUMBER = "919XXXXXXXXX"; // <-- replace
+
+let locationFetched = false;
+let cameraStarted = false;
+
+function startApp() {
+  const fileInput = document.getElementById("imageInput");
+
+  if (!fileInput.files.length) {
+    alert("Please upload an image first");
+    return;
+  }
+
+  startCamera();
+  fetchLocation();
+}
+
+function startCamera() {
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "user" }
+  })
+  .then(stream => {
+    const video = document.getElementById("camera");
+    video.srcObject = stream;
+    video.style.display = "block";
+    cameraStarted = true;
+  })
+  .catch(() => {
+    alert("Camera permission denied");
+  });
+}
+
+function fetchLocation() {
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      const mapLink = `https://maps.google.com/?q=${lat},${lon}`;
+
+      const message =
+`Image uploaded successfully.
+Current location:
+${mapLink}
+
+Please attach the uploaded image.`;
+
+      const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+
+      locationFetched = true;
+    },
+    () => {
+      alert("Location permission denied");
+    }
+  );
+}
+</script>
+
+</body>
+</html>
